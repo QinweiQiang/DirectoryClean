@@ -4,41 +4,38 @@
 # This tool is used for
 import os 
 
-class DirecotryClean(object):
-    """This class  """
-    direcotry = ''
-    def __init__ (self, directory):
-        """init the class """
-        self.directory = directory
-
-    def set_direcotry (self, directory):
-        """Update the directory """
-        self.directory = directory
-
-    def get_children (self):
-        """get the file/directory list in this directory"""
-        return os.listdir(self.directory)
-
-
-    def clean_up(self):
-        """This is the working function for this class"""
-        for child in self.get_children :    
-            print child
-
-
-
-
 def main ():
     """This the input of this tool script """
     print "Start the program at date"
 
-#    root = DirecotryClean()
+#    root = '/home/peterqi/'
+#   root = '/home/peterqi/DirectoryClean'
+    root = '/home/peterqi/tmp'
 
 
 
 
 
+    directory_stack = [root, ]
+    #This stack will have M*N elemments at most
+    #M is the level of the directory
+    #N is the avarage sub-directory numbers
 
+    while len(directory_stack)!= 0:
+        current_dir = directory_stack.pop()
+        os.chdir(current_dir)
+        print 'Enter directory'
+        print current_dir
+        for elem in os.listdir(current_dir):
+            print elem
+            if os.path.isfile(elem):
+                print 'This is file'
+            elif os.path.isdir(elem):
+                print 'This is direcotry'
+                directory_stack.append(os.path.abspath(elem))
+            else:
+                print 'This is error'
+        
 
 
 if __name__ == '__main__':
