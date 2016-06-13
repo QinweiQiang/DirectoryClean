@@ -47,7 +47,6 @@ FILE_FORMATE_LIST = ('.iso', \
      )
 
 
-
 def init_logging(logger):
     """Init the log system"""
     log_file = os.path.basename(__file__)+'.log'
@@ -118,8 +117,6 @@ def main ():
 
 
     logger.info('Start the tool !')
-
-
 
 
     while len(directory_stack)!= 0:
