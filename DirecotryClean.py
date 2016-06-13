@@ -5,8 +5,7 @@
 import os
 import logging
 
-
-
+logger = logging.getLogger()
 
 FILE_FORMATE_LIST = ('.iso', \
      '.webm',\
@@ -46,6 +45,7 @@ FILE_FORMATE_LIST = ('.iso', \
      '.f4a',\
      '.f4b'
      )
+
 
 
 def init_logging(logger):
@@ -95,27 +95,29 @@ def prepare_process_file(file_name):
     #if file is suffix with FILE_FORMATE_LIST, in to_move list
     if (suffix in FILE_FORMATE_LIST) or \
     (suffix.lower() in FILE_FORMATE_LIST):
-        logger.info('Video file, with format ' + suffix)
-                
-        return
+		logger.info('Video file:' + file_name)
 
     #if else, put it in manually operation list
-
 
 def main ():
     """This the input of this tool script """
 
-    logger = logging.getLogger()
-    init_logging(logger)
-    logger.info('Start the program at date')
-
-    root = '/home/peterqi/tmp'
-
+	#root = '/home/peterqi/tmp'
+    root = '/home/steven/mount/peter/160401'
+	
     #stack,a list, to store the temporary direcotries
     directory_stack = [root, ]
     #This stack will have M*N elemments at most
     #M is the level of the directory
     #N is the avarage sub-directory numbers
+
+
+    init_logging(logger)
+	
+	
+
+
+    logger.info('Start the tool !')
 
 
 
@@ -134,7 +136,7 @@ def main ():
                 logger.debug( elem + ' is directory')
                 directory_stack.append(os.path.abspath(elem))
             else:
-                logger.warn(elem + 'is either file or directory')
+                logger.warn(elem + ' is either file or directory')
 
 
 
