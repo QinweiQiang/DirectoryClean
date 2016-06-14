@@ -5,7 +5,6 @@
 import os
 import logging
 
-logger = logging.getLogger('peter')
 
 FILE_FORMATE_LIST = ('.iso', \
      '.webm',\
@@ -49,7 +48,6 @@ FILE_FORMATE_LIST = ('.iso', \
 
 def init_logging():
     """Init the log system"""
-    print "Init the logging"
     log_file = os.path.basename(__file__)+'.log'
     log_formater = logging.Formatter(
     '%(asctime)s \
@@ -69,10 +67,10 @@ def init_logging():
     log_handler_stdout.setFormatter(log_formater)
 
 
-    logger.addHandler(log_handler)
-    logger.addHandler(log_handler_stdout)
-    #logger.setLevel(logging.DEBUG)
-    logger.setLevel(logging.INFO)
+    logging.getLogger().addHandler(log_handler)
+    logging.getLogger().addHandler(log_handler_stdout)
+    logging.getLogger().setLevel(logging.INFO)
+    #logging.getLogger().setLevel(logging.DEBUG)
 
 
 
@@ -95,7 +93,7 @@ def prepare_process_file(file_name):
     #if file is suffix with FILE_FORMATE_LIST, in to_move list
     if (suffix in FILE_FORMATE_LIST) or \
     (suffix.lower() in FILE_FORMATE_LIST):
-        logger.info('Video file:' + file_name)
+        logging.info('Video file:' + file_name)
 
     #if else, put it in manually operation list
 
@@ -108,12 +106,13 @@ def prepare(stack):
     
     init_logging()
 
+    logging.info('Start the tool !')
     #check the directory_strack to see if all elements are 
     #valid directories
     for element in stack:
         if not os.path.isdir(element):
             stack.remove(element)
-            logger.warn("Remove directory '"+ element +
+            logging.warn("Remove directory '"+ element +
                     "'as it is not an valid directory")
 
 def main ():
@@ -129,24 +128,24 @@ def main ():
     
     prepare(directory_stack)
 
-    logger.info('Start the tool !')
+    logging.info('Start the tool !')
 
 
     while len(directory_stack)!= 0:
 
         current_dir = directory_stack.pop()
         os.chdir(current_dir)
-        logger.debug('Enter directory:'+current_dir)
+        logging.debug('Enter directory:'+current_dir)
 
         for elem in os.listdir(current_dir):
             if os.path.isfile(elem):
-                logger.debug( elem + ' is file')
+                logging.debug( elem + ' is file')
                 prepare_process_file(os.path.abspath(elem))
             elif os.path.isdir(elem):
-                logger.debug( elem + ' is directory')
+                logging.debug( elem + ' is directory')
                 directory_stack.append(os.path.abspath(elem))
             else:
-                logger.warn(elem + ' is either file or directory')
+                logging.warn(elem + ' is either file or directory')
 
 
 
