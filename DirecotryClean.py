@@ -5,7 +5,7 @@
 import os
 import logging
 
-logger = logging.getLogger()
+logger = logging.getLogger('peter')
 
 FILE_FORMATE_LIST = ('.iso', \
      '.webm',\
@@ -47,8 +47,9 @@ FILE_FORMATE_LIST = ('.iso', \
      )
 
 
-def init_logging(logger):
+def init_logging():
     """Init the log system"""
+    print "Init the logging"
     log_file = os.path.basename(__file__)+'.log'
     log_formater = logging.Formatter(
     '%(asctime)s \
@@ -94,27 +95,39 @@ def prepare_process_file(file_name):
     #if file is suffix with FILE_FORMATE_LIST, in to_move list
     if (suffix in FILE_FORMATE_LIST) or \
     (suffix.lower() in FILE_FORMATE_LIST):
-		logger.info('Video file:' + file_name)
+        logger.info('Video file:' + file_name)
 
     #if else, put it in manually operation list
+
+
+
+
+
+def prepare(stack):
+    """Prepare everything before real work"""
+    
+    init_logging()
+
+    #check the directory_strack to see if all elements are 
+    #valid directories
+    for element in stack:
+        if not os.path.isdir(element):
+            stack.remove(element)
+            logger.warn("Remove directory '"+ element +
+                    "'as it is not an valid directory")
 
 def main ():
     """This the input of this tool script """
 
-	#root = '/home/peterqi/tmp'
-    root = '/home/steven/mount/peter/160401'
 	
-    #stack,a list, to store the temporary direcotries
-    directory_stack = [root, ]
-    #This stack will have M*N elemments at most
+    #stack,a list, to store the init and temporary direcotries
+    directory_stack = ['/home/peterqi/tmp', \
+                       '/home/steven/mount/peter/160401']
+    #This stack will have M*(N-1) elemments at most
     #M is the level of the directory
     #N is the avarage sub-directory numbers
-
-
-    init_logging(logger)
-	
-	
-
+    
+    prepare(directory_stack)
 
     logger.info('Start the tool !')
 
