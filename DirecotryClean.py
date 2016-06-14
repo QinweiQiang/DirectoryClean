@@ -6,6 +6,9 @@ import os
 import logging
 
 
+#size unit MB
+FILE_SIZE_BOUNDARY = 100
+
 FILE_FORMATE_LIST = ('.iso', \
      '.webm',\
      '.mkv',\
@@ -70,32 +73,47 @@ def init_logging():
     logging.getLogger().addHandler(log_handler)
     logging.getLogger().addHandler(log_handler_stdout)
     logging.getLogger().setLevel(logging.INFO)
-    #logging.getLogger().setLevel(logging.DEBUG)
+#    logging.getLogger().setLevel(logging.DEBUG)
 
 
 
-
-def prepare_process_file(file_name):
+def classify_files(file_name, list_video, list_torrent, list_remove, \
+        list_unclassify):
     """Prepare process the file
        Check the file name and file size, etc.
        Put the
        """
-    #need file bigger than 100MB
-    #file_size_boundary = 100*1024*1024
-    #FILE_FORMATE_LIST
-    
-    #if file size less than file_size_boundary,  to_remove list
+    logging.debug('classify_files') 
 
+    file_size = os.path.getsize(file_name)
 
     #get suffix of file
     suffix = os.path.splitext(file_name)[1]
 
-    #if file is suffix with FILE_FORMATE_LIST, in to_move list
+    #if file is suffix with '.torrent'
+    if suffix == '.torrent':
+        list_torrent.append([file_name, file_size])
+        logging.debug('File is torrent file')
+        return
+
+
+
+    #if file is suffix with FILE_FORMATE_LIST
     if (suffix in FILE_FORMATE_LIST) or \
     (suffix.lower() in FILE_FORMATE_LIST):
+        list_video.append([file_name, file_size])
         logging.info('Video file:' + file_name)
+        return
+   
+    #if file size less than FILE_SIZE_BOUNDARY, to remove list
+    if (file_size < FILE_SIZE_BOUNDARY*1024*1024):
+        list_remove.append(file_name)
+        logging.info('File size less than %s MB, remove it', FILE_SIZE_BOUNDARY)
+        return
+       
+    #if else, put it in unclassify list
+    list_unclassify.append([file_name, file_size])
 
-    #if else, put it in manually operation list
 
 
 
@@ -115,37 +133,68 @@ def prepare(stack):
             logging.warn("Remove directory '"+ element +
                     "'as it is not an valid directory")
 
-def main ():
-    """This the input of this tool script """
-
-	
-    #stack,a list, to store the init and temporary direcotries
-    directory_stack = ['/home/peterqi/tmp', \
-                       '/home/steven/mount/peter/160401']
-    #This stack will have M*(N-1) elemments at most
-    #M is the level of the directory
-    #N is the avarage sub-directory numbers
-    
-    prepare(directory_stack)
-
-    logging.info('Start the tool !')
+def find_files(directories):
+    """Loop over all the directories/sub-directories to find all files
+       Store absolute file name to different temporary files according
+       to different file format
+       """
+    list_for_remove = []
+    list_for_torrent = []
+    list_for_video = []
+    list_for_unclassify = []
 
 
-    while len(directory_stack)!= 0:
+    while len(directories)!= 0:
 
-        current_dir = directory_stack.pop()
+        current_dir = directories.pop()
         os.chdir(current_dir)
         logging.debug('Enter directory:'+current_dir)
 
         for elem in os.listdir(current_dir):
             if os.path.isfile(elem):
                 logging.debug( elem + ' is file')
-                prepare_process_file(os.path.abspath(elem))
+                classify_files(os.path.abspath(elem), list_for_video, \
+                        list_for_torrent, \
+                        list_for_remove, \
+                        list_for_unclassify)
             elif os.path.isdir(elem):
                 logging.debug( elem + ' is directory')
-                directory_stack.append(os.path.abspath(elem))
+                directories.append(os.path.abspath(elem))
             else:
                 logging.warn(elem + ' is either file or directory')
+ 
+    print list_for_remove
+    print '---------------------------------'
+    print list_for_torrent
+    print '---------------------------------'
+    print list_for_video
+    print '---------------------------------'
+    print list_for_unclassify
+
+    #delete/move the file when classify it is a little 'rude'
+    #store their absolute names into files first
+
+
+
+
+def main ():
+    """This the input of this tool script """
+
+	
+    #stack,a list, to store the init and temporary direcotries
+    directory_stack = ['/home/peterqi/DirectoryClean_test', \
+                      #'/home/peterqi/tmp', \
+                      '/home/steven/mount/peter/160401']
+    #This stack will have M*(N-1) elemments at most
+    #M is the level of the directory
+    #N is the avarage sub-directory numbers
+    
+    prepare(directory_stack)
+    find_files(directory_stack)
+#    move_files()
+
+
+
 
 
 
