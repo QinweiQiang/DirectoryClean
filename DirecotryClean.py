@@ -4,11 +4,12 @@
 
 import os
 import logging
-
+import shutil
 
 #size unit MB
 FILE_SIZE_BOUNDARY = 100
-
+# check if dir end without /
+DESTINATION_DIR = '/home/peterqi/tmp/'
 FILE_FORMATE_LIST = ('.iso', \
      '.webm',\
      '.mkv',\
@@ -132,8 +133,11 @@ def prepare(stack):
             stack.remove(element)
             logging.warn("Remove directory '"+ element +
                     "'as it is not an valid directory")
+#    DESTINATION_DIR = '/home/peterqi/DirectoryClean_test'
+    if not os.path.isdir(DESTINATION_DIR):
+        logging.error('Destination directory '+ DESTINATION_DIR +' is invalid')
 
-def find_files(directories):
+def move_files(directories):
     """Loop over all the directories/sub-directories to find all files
        Store absolute file name to different temporary files according
        to different file format
@@ -173,10 +177,22 @@ def find_files(directories):
 
     #delete/move the file when classify it is a little 'rude'
     #store their absolute names into files first
+    destination = os.statvfs(DESTINATION_DIR)
+    free_size = destination.f_bavail*destination.f_bsize
+    logging.info("Destination directory %s has %s free space", DESTINATION_DIR, 
+            free_size)
+    free_size = free_size-150*1024*1024
+
+    for elem in list_for_video:
+        if (elem[1] < free_size):
+            print 'move '+elem[0]
+            shutil.copy2(elem[0], DESTINATION_DIR+os.path.basename(elem[0]))
+        else:
+            logging.error('No enough space on' +DESTINATION_DIR)
 
 
-
-
+#def try_move
+    
 def main ():
     """This the input of this tool script """
 
@@ -190,8 +206,7 @@ def main ():
     #N is the avarage sub-directory numbers
     
     prepare(directory_stack)
-    find_files(directory_stack)
-#    move_files()
+    move_files(directory_stack)
 
 
 
