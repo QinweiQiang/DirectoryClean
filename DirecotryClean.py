@@ -74,7 +74,7 @@ def init_logging():
     logging.getLogger().addHandler(log_handler)
     logging.getLogger().addHandler(log_handler_stdout)
     logging.getLogger().setLevel(logging.INFO)
-#    logging.getLogger().setLevel(logging.DEBUG)
+    logging.getLogger().setLevel(logging.DEBUG)
 
 
 
@@ -156,13 +156,13 @@ def move_files(directories):
 
         for elem in os.listdir(current_dir):
             if os.path.isfile(elem):
-                logging.debug( elem + ' is file')
+                #logging.debug( elem + ' is file')
                 classify_files(os.path.abspath(elem), list_for_video, \
                         list_for_torrent, \
                         list_for_remove, \
                         list_for_unclassify)
             elif os.path.isdir(elem):
-                logging.debug( elem + ' is directory')
+                #logging.debug( elem + ' is directory')
                 directories.append(os.path.abspath(elem))
             else:
                 logging.warn(elem + ' is either file or directory')
@@ -183,15 +183,48 @@ def move_files(directories):
             free_size)
     free_size = free_size-150*1024*1024
 
-    for elem in list_for_video:
+    dir_video = DESTINATION_DIR + '/video.peter' 
+    if not os.path.exists(dir_video):
+        os.makedirs(dir_video)
+
+    while len(list_for_video) != 0:
+        elem = list_for_video.pop()
         if (elem[1] < free_size):
-            print 'move '+elem[0]
-            shutil.copy2(elem[0], DESTINATION_DIR+os.path.basename(elem[0]))
+
+            destinate_file_name = dir_video + '/' + os.path.basename(elem[0])
+            if os.path.exists (destinate_file_name):
+                #check the file size(md5 is more offcial, but,,,,,)
+                dest_file_size = os.statvfs(destinate_file_name)
+                
+                if (elem[1] == dest_file_size.f_bavail*dest_file_size.f_bsize):
+                    logging.info ('Same name/size file '+ 
+                            os.path.basename(elem[0]) + ' already exists')
+                    continue
+                else:
+                    destinate_file_name = dir_video + '/' \
+                    + 'sec.' + os.path.basename(elem[0])
+
+            try_move(elem[0], destinate_file_name)
+            
         else:
             logging.error('No enough space on' +DESTINATION_DIR)
+            #store rest of elem into file
 
 
-#def try_move
+def try_move(src, dst):
+    """Copy the file, if successful, delete the source file"""
+    logging.debug('Move file: ' + src)
+
+    try:
+        shutil.copy2(src, dst)
+    except IOError, error: 
+        logging.error('Unable to copy file. %s', error)
+        return
+
+    #remove the source file if no exception
+    #need try too
+    os.remove(src) 
+    logging.debug('Delete source file' + src)
     
 def main ():
     """This the input of this tool script """
