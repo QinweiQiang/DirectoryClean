@@ -74,7 +74,7 @@ def init_logging():
     logging.getLogger().addHandler(log_handler)
     logging.getLogger().addHandler(log_handler_stdout)
     logging.getLogger().setLevel(logging.INFO)
-    logging.getLogger().setLevel(logging.DEBUG)
+#    logging.getLogger().setLevel(logging.DEBUG)
 
 
 
@@ -214,6 +214,21 @@ def move_files(directories):
 def try_move(src, dst):
     """Copy the file, if successful, delete the source file"""
     logging.debug('Move file: ' + src)
+    destinate_file_name = dst + '/' + os.path.basename(elem[0])
+
+    if os.path.exists (destinate_file_name):
+        #check the file size(md5 is more offcial, but,,,,,)
+        dest_file_size = os.statvfs(destinate_file_name)
+                
+                if (elem[1] == dest_file_size.f_bavail*dest_file_size.f_bsize):
+                    logging.info ('Same name/size file '+ 
+                            os.path.basename(elem[0]) + ' already exists')
+
+
+
+
+
+
 
     try:
         shutil.copy2(src, dst)
