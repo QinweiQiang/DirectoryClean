@@ -152,7 +152,7 @@ def move_files(directories):
 
         current_dir = directories.pop()
         os.chdir(current_dir)
-        logging.debug('Enter directory:'+current_dir)
+        #logging.debug('Enter directory:'+current_dir)
 
         for elem in os.listdir(current_dir):
             if os.path.isfile(elem):
@@ -191,20 +191,7 @@ def move_files(directories):
         elem = list_for_video.pop()
         if (elem[1] < free_size):
 
-            destinate_file_name = dir_video + '/' + os.path.basename(elem[0])
-            if os.path.exists (destinate_file_name):
-                #check the file size(md5 is more offcial, but,,,,,)
-                dest_file_size = os.statvfs(destinate_file_name)
-                
-                if (elem[1] == dest_file_size.f_bavail*dest_file_size.f_bsize):
-                    logging.info ('Same name/size file '+ 
-                            os.path.basename(elem[0]) + ' already exists')
-                    continue
-                else:
-                    destinate_file_name = dir_video + '/' \
-                    + 'sec.' + os.path.basename(elem[0])
-
-            try_move(elem[0], destinate_file_name)
+            try_move(elem[0], dir_video)
             
         else:
             logging.error('No enough space on' +DESTINATION_DIR)
@@ -212,49 +199,43 @@ def move_files(directories):
 
 
 def try_move(src, dst):
-    """Copy the file, if successful, delete the source file"""
-    logging.debug('Move file: ' + src)
-    destinate_file_name = dst + '/' + os.path.basename(elem[0])
+	"""If the src and dst are on same device/partion, move it directly
+    If not, copy the file, if successful, delete the source file"""
 
-    if os.path.exists (destinate_file_name):
-        #check the file size(md5 is more offcial, but,,,,,)
-        dest_file_size = os.statvfs(destinate_file_name)
-                
-                if (elem[1] == dest_file_size.f_bavail*dest_file_size.f_bsize):
-                    logging.info ('Same name/size file '+ 
-                            os.path.basename(elem[0]) + ' already exists')
+	logging.debug('Start to move file: ' + src)
 
+	destinate_file_name = dst + '/' + os.path.basename(src)
+	if os.path.exists (destinate_file_name):
+		logging.warn('Same file exist on target directory: '+ src)
+		return
 
+	#check if source and destination are on same device
+	if (os.stat(src).st_dev == os.stat(dst).st_dev):
+		#move it
+		logging.debug('Same device, move directly!')
+		shutil.move (src, destinate_file_name)
+	else:
+		#copy
+		shutil.copy(src, dst)
+		#delete src file
+		import shutil
 
-
-
-
-
-    try:
-        shutil.copy2(src, dst)
-    except IOError, error: 
-        logging.error('Unable to copy file. %s', error)
-        return
-
-    #remove the source file if no exception
-    #need try too
-    os.remove(src) 
-    logging.debug('Delete source file' + src)
-    
 def main ():
     """This the input of this tool script """
 
 	
     #stack,a list, to store the init and temporary direcotries
-    directory_stack = ['/home/peterqi/DirectoryClean_test', \
+    directory_stack = ['/home/peterqi/DirectoryClean_test' ]
                       #'/home/peterqi/tmp', \
-                      '/home/steven/mount/peter/160401']
+                      #'/home/steven/mount/peter/160401'
+
     #This stack will have M*(N-1) elemments at most
     #M is the level of the directory
     #N is the avarage sub-directory numbers
     
     prepare(directory_stack)
-    move_files(directory_stack)
+
+	move_files(directory_stack)
 
 
 
