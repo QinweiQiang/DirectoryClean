@@ -10,6 +10,7 @@ import shutil
 FILE_SIZE_BOUNDARY = 100
 # check if dir end without /
 DESTINATION_DIR = '/home/steven/tmp/peter/1231/'
+SOURCE_DIR = '/home/steven/tmp/peter/160401/'
 FILE_FORMATE_LIST = ('.iso', \
      '.webm',\
      '.mkv',\
@@ -194,6 +195,7 @@ def move_files(directories):
             try_move(elem[0], dir_video)
 
         else:
+			#consider on the same devide, no need to check this
             logging.error('No enough space on' +DESTINATION_DIR)
             #store rest of elem into file
 
@@ -224,7 +226,7 @@ def main ():
 
 
     #stack,a list, to store the init and temporary direcotries
-    directory_stack = ['/home/steven/tmp/peter/1231/' ]
+    directory_stack = [SOURCE_DIR]
                       #'/home/peterqi/tmp', \
                       #'/home/steven/mount/peter/160401'
 
@@ -243,3 +245,5 @@ def main ():
 
 if __name__ == '__main__':
     main ()
+# need to remember the source device and destination devide, in tunple? or global variable
+
