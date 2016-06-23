@@ -9,7 +9,7 @@ import shutil
 #size unit MB
 FILE_SIZE_BOUNDARY = 100
 # check if dir end without /
-DESTINATION_DIR = '/home/peterqi/tmp/'
+DESTINATION_DIR = '/home/steven/tmp/peter/1231/'
 FILE_FORMATE_LIST = ('.iso', \
      '.webm',\
      '.mkv',\
@@ -215,16 +215,16 @@ def try_move(src, dst):
         shutil.move (src, destinate_file_name)
     else:
         logging.debug('Different device, copy then delete')
-        #copy
-        shutil.copy(src, dst)        
-        #delete src file
-        shutile.remove(src)
+        shutil.copy(src, dst)     
+
+        logging.debug('delete the source file')   
+        os.remove(src)
 def main ():
     """This the input of this tool script """
 
 
     #stack,a list, to store the init and temporary direcotries
-    directory_stack = ['/home/peterqi/DirectoryClean_test' ]
+    directory_stack = ['/home/steven/tmp/peter/1231/' ]
                       #'/home/peterqi/tmp', \
                       #'/home/steven/mount/peter/160401'
 
