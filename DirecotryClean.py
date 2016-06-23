@@ -74,7 +74,7 @@ def init_logging():
     logging.getLogger().addHandler(log_handler)
     logging.getLogger().addHandler(log_handler_stdout)
     logging.getLogger().setLevel(logging.INFO)
-#    logging.getLogger().setLevel(logging.DEBUG)
+    logging.getLogger().setLevel(logging.DEBUG)
 
 
 
@@ -84,7 +84,7 @@ def classify_files(file_name, list_video, list_torrent, list_remove, \
        Check the file name and file size, etc.
        Put the
        """
-    logging.debug('classify_files') 
+    logging.debug('classify_files')
 
     file_size = os.path.getsize(file_name)
 
@@ -105,13 +105,13 @@ def classify_files(file_name, list_video, list_torrent, list_remove, \
         list_video.append([file_name, file_size])
         logging.info('Video file:' + file_name)
         return
-   
+
     #if file size less than FILE_SIZE_BOUNDARY, to remove list
     if (file_size < FILE_SIZE_BOUNDARY*1024*1024):
         list_remove.append(file_name)
         logging.info('File size less than %s MB, remove it', FILE_SIZE_BOUNDARY)
         return
-       
+
     #if else, put it in unclassify list
     list_unclassify.append([file_name, file_size])
 
@@ -122,11 +122,11 @@ def classify_files(file_name, list_video, list_torrent, list_remove, \
 
 def prepare(stack):
     """Prepare everything before real work"""
-    
+
     init_logging()
 
     logging.info('Start the tool !')
-    #check the directory_strack to see if all elements are 
+    #check the directory_strack to see if all elements are
     #valid directories
     for element in stack:
         if not os.path.isdir(element):
@@ -166,7 +166,7 @@ def move_files(directories):
                 directories.append(os.path.abspath(elem))
             else:
                 logging.warn(elem + ' is either file or directory')
- 
+
     print list_for_remove
     print '---------------------------------'
     print list_for_torrent
@@ -179,11 +179,11 @@ def move_files(directories):
     #store their absolute names into files first
     destination = os.statvfs(DESTINATION_DIR)
     free_size = destination.f_bavail*destination.f_bsize
-    logging.info("Destination directory %s has %s free space", DESTINATION_DIR, 
+    logging.info("Destination directory %s has %s free space", DESTINATION_DIR,
             free_size)
     free_size = free_size-150*1024*1024
 
-    dir_video = DESTINATION_DIR + '/video.peter' 
+    dir_video = DESTINATION_DIR + '/video.peter'
     if not os.path.exists(dir_video):
         os.makedirs(dir_video)
 
@@ -192,38 +192,37 @@ def move_files(directories):
         if (elem[1] < free_size):
 
             try_move(elem[0], dir_video)
-            
+
         else:
             logging.error('No enough space on' +DESTINATION_DIR)
             #store rest of elem into file
 
 
 def try_move(src, dst):
-	"""If the src and dst are on same device/partion, move it directly
+    """If the src and dst are on same device/partion, move it directly
     If not, copy the file, if successful, delete the source file"""
 
-	logging.debug('Start to move file: ' + src)
+    logging.debug('Start to move file: ' + src)
 
-	destinate_file_name = dst + '/' + os.path.basename(src)
-	if os.path.exists (destinate_file_name):
-		logging.warn('Same file exist on target directory: '+ src)
-		return
+    destinate_file_name = dst + '/' + os.path.basename(src)
+    if os.path.exists (destinate_file_name):
+            logging.warn('Same file exist on target directory: '+ src)
+            return
 
-	#check if source and destination are on same device
-	if (os.stat(src).st_dev == os.stat(dst).st_dev):
-		#move it
-		logging.debug('Same device, move directly!')
-		shutil.move (src, destinate_file_name)
-	else:
-		#copy
-		shutil.copy(src, dst)
-		#delete src file
-		import shutil
-
+    #check if source and destination are on same device
+    if (os.stat(src).st_dev == os.stat(dst).st_dev):
+        logging.debug('Same device, move directly!')
+        shutil.move (src, destinate_file_name)
+    else:
+        logging.debug('Different device, copy then delete')
+        #copy
+        shutil.copy(src, dst)        
+        #delete src file
+        shutile.remove(src)
 def main ():
     """This the input of this tool script """
 
-	
+
     #stack,a list, to store the init and temporary direcotries
     directory_stack = ['/home/peterqi/DirectoryClean_test' ]
                       #'/home/peterqi/tmp', \
@@ -232,10 +231,10 @@ def main ():
     #This stack will have M*(N-1) elemments at most
     #M is the level of the directory
     #N is the avarage sub-directory numbers
-    
+
     prepare(directory_stack)
 
-	move_files(directory_stack)
+    move_files(directory_stack)
 
 
 
