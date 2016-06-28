@@ -6,12 +6,7 @@ import shutil
 
 #size unit MB
 FILE_SIZE_BOUNDARY = 100
-# check if dir end without /
-HOME = '/home/peterqi/'
 
-SOURCE_DIR = HOME + 'DirectoryClean_test'
-DESTINATION_DIR = HOME + 'DirectoryClean_test'
-DESTINATION_DIR = '/db/apps/'
 FILE_FORMATE_LIST = ('.iso', \
      '.webm',\
      '.mkv',\
@@ -112,7 +107,7 @@ def move_files(file_list, dst_dir):
 
     #delete/move the file when classify it is a little 'rude'
     #store their absolute names into files first
-
+    logging.debug ('Move files to ' +dst_dir)
     no_move = False
     while len(file_list) != 0:
         elem = file_list.pop()
@@ -123,26 +118,25 @@ def move_files(file_list, dst_dir):
 
         try:
             try_move(elem, dst_dir)
-        except Exception, msg:
-            logging.warn('Error when move file' + msg)
+        except Exception:
+            logging.warn('Error when move file ' +elem )
             no_move = True
 
 
 class DirecotryClean:
     """ This is the main class for this tool"""
 
-    source_dir = ''
-    dest_dir = ''
-    dir_video = ''
-    dir_torrent = ''
-    list_for_video = []
-    list_for_remove = []
-    list_for_torrent = []
-    list_for_unclassify = []
 
-
-    def __init__ (self):
+    def __init__ (self, src, dst):
         """ nothing need to do here"""
+        self.source_dir = src
+        self.dest_dir = dst
+        self.dir_video = self.dest_dir + '/video'
+        self.dir_torrent = self.dest_dir + '/torrent'
+        self.list_for_video = []
+        self.list_for_remove = []
+        self.list_for_torrent = []
+        self.list_for_unclassify = []
 
 
     def classify_files(self, file_name):
@@ -176,7 +170,7 @@ class DirecotryClean:
 
         #if else, put it in unclassify list
         self.list_for_unclassify.append(file_name)
-        return 1
+        return 0
 
 
     def precheck(self):
@@ -199,8 +193,6 @@ class DirecotryClean:
         except Exception:
             logging.warn('Create destination directory failed')
             return 1
-
-
 
         return 0
 
@@ -241,21 +233,11 @@ def main ():
 
     init_logging()
 
+    directory1 = DirecotryClean('/home/peterqi/DirectoryClean_test',
+                                '/home/peterqi/DirectoryClean_test')
 
-    directory1 = DirecotryClean()
-    directory1.source_dir = '/home/peterqi/DirectoryClean_test'
-    directory1.dest_dir = '/home/peterqi/DirectoryClean_test'
-
-    directory1.dir_video = directory1.dest_dir + '/video'
-    directory1.dir_torrent = directory1.dest_dir + '/torrent'
-
-
-    directory2 = DirecotryClean()
-    directory2.source_dir = '/home/peterqi/DirectoryClean_test11'
-    directory2.dest_dir = '/home/peterqi/DirectoryClean_test11'
-    directory2.dir_video = directory2.dest_dir + '/video'
-    directory2.dir_torrent = directory2.dest_dir + '/torrent'
-
+    directory2 = DirecotryClean('/home/peterqi/DirectoryClean_test11',
+                                '/home/peterqi/DirectoryClean_test11')
 
 
     instance_list = []
@@ -268,11 +250,10 @@ def main ():
                          directory1.source_dir)
             instance_list.remove(instance)
             continue
-
         instance.get_file_lists()
 
-
     for instance in instance_list:
+        print instance
         instance.move_all_types_files()
 
 
