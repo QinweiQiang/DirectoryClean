@@ -6,11 +6,16 @@ import os
 import logging
 import shutil
 
+
 #size unit MB
 FILE_SIZE_BOUNDARY = 100
 # check if dir end without /
-DESTINATION_DIR = '/home/steven/tmp/peter/1231/'
-SOURCE_DIR = '/home/steven/tmp/peter/160401/'
+#DESTINATION_DIR = '/home/steven/tmp/peter/1231/'
+HOME = '/home/peterqi/'
+
+
+DESTINATION_DIR = HOME + 'DirectoryClean_test' 
+SOURCE_DIR = HOME + 'DirectoryClean_test'
 FILE_FORMATE_LIST = ('.iso', \
      '.webm',\
      '.mkv',\
@@ -56,8 +61,8 @@ def init_logging():
     log_file = os.path.basename(__file__)+'.log'
     log_formater = logging.Formatter(
     '%(asctime)s \
-    %(levelname)s \
-    %(filename)s:%(lineno)d \
+    %(levelname)7s \
+    %(filename)s:%(lineno)4d \
     %(message)s')
 
     #logging.FileHandler(filename, mode='a', encoding=None, delay=False)
@@ -77,166 +82,199 @@ def init_logging():
     logging.getLogger().setLevel(logging.INFO)
     logging.getLogger().setLevel(logging.DEBUG)
 
-
-
-def classify_files(file_name, list_video, list_torrent, list_remove, \
-        list_unclassify):
-    """Prepare process the file
-       Check the file name and file size, etc.
-       Put the
-       """
-    logging.debug('classify_files')
-
-    file_size = os.path.getsize(file_name)
-
-    #get suffix of file
-    suffix = os.path.splitext(file_name)[1]
-
-    #if file is suffix with '.torrent'
-    if suffix == '.torrent':
-        list_torrent.append([file_name, file_size])
-        logging.debug('File is torrent file')
-        return
-
-
-
-    #if file is suffix with FILE_FORMATE_LIST
-    if (suffix in FILE_FORMATE_LIST) or \
-    (suffix.lower() in FILE_FORMATE_LIST):
-        list_video.append([file_name, file_size])
-        logging.info('Video file:' + file_name)
-        return
-
-    #if file size less than FILE_SIZE_BOUNDARY, to remove list
-    if (file_size < FILE_SIZE_BOUNDARY*1024*1024):
-        list_remove.append(file_name)
-        logging.info('File size less than %s MB, remove it', FILE_SIZE_BOUNDARY)
-        return
-
-    #if else, put it in unclassify list
-    list_unclassify.append([file_name, file_size])
-
-
-
-
-
-
-def prepare(stack):
-    """Prepare everything before real work"""
-
-    init_logging()
-
-    logging.info('Start the tool !')
-    #check the directory_strack to see if all elements are
-    #valid directories
-    for element in stack:
-        if not os.path.isdir(element):
-            stack.remove(element)
-            logging.warn("Remove directory '"+ element +
-                    "'as it is not an valid directory")
-#    DESTINATION_DIR = '/home/peterqi/DirectoryClean_test'
-    if not os.path.isdir(DESTINATION_DIR):
-        logging.error('Destination directory '+ DESTINATION_DIR +' is invalid')
-
-def move_files(directories):
-    """Loop over all the directories/sub-directories to find all files
-       Store absolute file name to different temporary files according
-       to different file format
-       """
-    list_for_remove = []
-    list_for_torrent = []
-    list_for_video = []
-    list_for_unclassify = []
-
-
-    while len(directories)!= 0:
-
-        current_dir = directories.pop()
-        os.chdir(current_dir)
-        #logging.debug('Enter directory:'+current_dir)
-
-        for elem in os.listdir(current_dir):
-            if os.path.isfile(elem):
-                #logging.debug( elem + ' is file')
-                classify_files(os.path.abspath(elem), list_for_video, \
-                        list_for_torrent, \
-                        list_for_remove, \
-                        list_for_unclassify)
-            elif os.path.isdir(elem):
-                #logging.debug( elem + ' is directory')
-                directories.append(os.path.abspath(elem))
-            else:
-                logging.warn(elem + ' is either file or directory')
-
-    print list_for_remove
-    print '---------------------------------'
-    print list_for_torrent
-    print '---------------------------------'
-    print list_for_video
-    print '---------------------------------'
-    print list_for_unclassify
-
-    #delete/move the file when classify it is a little 'rude'
-    #store their absolute names into files first
-    destination = os.statvfs(DESTINATION_DIR)
-    free_size = destination.f_bavail*destination.f_bsize
-    logging.info("Destination directory %s has %s free space", DESTINATION_DIR,
-            free_size)
-    free_size = free_size-150*1024*1024
-
-    dir_video = DESTINATION_DIR + '/video.peter'
-    if not os.path.exists(dir_video):
-        os.makedirs(dir_video)
-
-    while len(list_for_video) != 0:
-        elem = list_for_video.pop()
-        if (elem[1] < free_size):
-
-            try_move(elem[0], dir_video)
-
-        else:
-			#consider on the same devide, no need to check this
-            logging.error('No enough space on' +DESTINATION_DIR)
-            #store rest of elem into file
-
-
 def try_move(src, dst):
     """If the src and dst are on same device/partion, move it directly
     If not, copy the file, if successful, delete the source file"""
-
-    logging.debug('Start to move file: ' + src)
-
+ 
+    logging.debug('Moving file ' + src)
+ 
     destinate_file_name = dst + '/' + os.path.basename(src)
     if os.path.exists (destinate_file_name):
-            logging.warn('Same file exist on target directory: '+ src)
-            return
-
-    #check if source and destination are on same device
-    if (os.stat(src).st_dev == os.stat(dst).st_dev):
-        logging.debug('Same device, move directly!')
+        logging.warn('Same file exists on target directory: '+ src)
+        return 1
+ 
+    try:
         shutil.move (src, destinate_file_name)
-    else:
-        logging.debug('Different device, copy then delete')
-        shutil.copy(src, dst)     
+        return 0
 
-        logging.debug('delete the source file')   
-        os.remove(src)
+    except IOError, msg:
+        logging.warn('Error when move file ' + src + ' error' + msg)
+        return 1
+    # #check if source and destination are on same device
+    # if (os.stat(src).st_dev == os.stat(dst).st_dev):
+    #     logging.debug('Same device, move directly!')
+    #     shutil.move (src, destinate_file_name)
+    # else:
+    #     logging.debug('Different device, copy then delete')
+    #     shutil.copy(src, dst)     
+ 
+    #     logging.debug('delete the source file')   
+    #     os.remove(src)
+ 
+class DirecotryClean:
+    """ This is the main class for this tool"""
+    
+
+    source_dir = ''
+    dest_dir = ''
+    list_for_video = []
+    list_for_remove = []
+    list_for_torrent = []
+    list_for_unclassify = []
+
+
+
+
+
+    def __init__ (self):
+        """ nothing need to do here"""
+
+
+
+    def classify_files(self, file_name):
+        """Prepare process the file
+           Check the file name and file size, etc.
+           Put the
+           """
+        #logging.debug('Start to classify files')
+    
+        file_size = os.path.getsize(file_name)
+    
+        #get suffix of file
+        suffix = os.path.splitext(file_name)[1]
+    
+        #if file is suffix with '.torrent'
+        if suffix == '.torrent':
+            self.list_for_torrent.append([file_name, file_size])
+            logging.debug('File is torrent file')
+            return 0
+    
+    
+    
+        #if file is suffix with FILE_FORMATE_LIST
+        if (suffix in FILE_FORMATE_LIST) or \
+        (suffix.lower() in FILE_FORMATE_LIST):
+            self.list_for_video.append([file_name, file_size])
+            logging.info('Video file:' + file_name)
+            return 0
+    
+        #if file size less than FILE_SIZE_BOUNDARY, to remove list
+        if (file_size < FILE_SIZE_BOUNDARY*1024*1024):
+            self.list_for_remove.append(file_name)
+            logging.info('File size less than %s MB, remove it', 
+                    FILE_SIZE_BOUNDARY)
+            return 0
+    
+        #if else, put it in unclassify list
+        self.list_for_unclassify.append([file_name, file_size])
+        return 1
+    
+    
+    
+    
+    
+    def precheck(self):
+        """ Check before everything"""
+        if not os.path.isdir(self.source_dir):
+            logging.warn('Source direcotry '+ self.source_dir + ' is invalid')
+            return 1
+
+        if not os.path.isdir(self.dest_dir):
+            logging.warn('Destination directory '+ self.dest_dir + 
+                         ' is invalid')
+            return 1
+
+        return 0
+
+
+
+    
+    def get_file_lists(self):
+        """Loop over all the directories/sub-directories to find all files
+           Store absolute file name to different temporary files according
+           to different file format
+           """
+        
+        directories = [self.source_dir]
+        while len(directories)!= 0:
+    
+            current_dir = directories.pop()
+            os.chdir(current_dir)
+            os.stat(self.source_dir).st_dev
+
+            for elem in os.listdir(current_dir):
+                if os.path.isfile(elem):
+                    #logging.debug( elem + ' is file')
+                    self.classify_files(os.path.abspath(elem))
+
+                elif os.path.isdir(elem):
+                    #logging.debug( elem + ' is directory')
+                    directories.append(os.path.abspath(elem))
+                else:
+                    logging.warn(elem + ' is either file or directory')
+    
+
+    
+
+
+    def move_files(self):
+        """ Move the files"""
+
+        #delete/move the file when classify it is a little 'rude'
+        #store their absolute names into files first
+    
+        dir_video = self.dest_dir + '/video'
+        if not os.path.exists(dir_video):
+            os.makedirs(dir_video)
+    
+        while len(self.list_for_video) != 0:
+            try:
+                elem = self.list_for_video.pop()
+                try_move(elem[0], dir_video)
+            except Exception, msg:
+                logging.warn('Error when move file' + 
+                             msg)
+                logging.warn('Continuing')
+                continue
+
+           
+   
 def main ():
     """This the input of this tool script """
 
+    init_logging()
+    
 
-    #stack,a list, to store the init and temporary direcotries
-    directory_stack = [SOURCE_DIR]
-                      #'/home/peterqi/tmp', \
-                      #'/home/steven/mount/peter/160401'
+    directory1 = DirecotryClean()
+    directory1.source_dir = SOURCE_DIR
+    directory1.dest_dir = DESTINATION_DIR
 
-    #This stack will have M*(N-1) elemments at most
-    #M is the level of the directory
-    #N is the avarage sub-directory numbers
+    instance_list = []
+    instance_list.append(directory1)
+    #sedond instance
+    #third instance
 
-    prepare(directory_stack)
 
-    move_files(directory_stack)
+
+
+
+    for instance in instance_list:
+        if (1 == instance.precheck()):
+            logging.warn('Invalid init data, skip')
+            instance_list.remove(instance)
+            continue
+
+
+
+        instance.get_file_lists()
+
+
+
+    logging.info('Start to move the files')
+
+    for instance in instance_list:
+        instance.move_files()
+
 
 
 
@@ -245,5 +283,6 @@ def main ():
 
 if __name__ == '__main__':
     main ()
-# need to remember the source device and destination devide, in tunple? or global variable
+# need to remember the source device and destination devide, in tunple? 
+# or global variable
 
